@@ -1,0 +1,11 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "homework 12: MySQL Employee Tracker",
+  "main": "employeetracker.js",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^6.2.1",
+    "mysql": "^2.16.0"
+  }
+}
