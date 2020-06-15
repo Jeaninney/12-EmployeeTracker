@@ -50,7 +50,7 @@ function selectAction() {
         "EXIT"]
     })
     .then(function(answer) {
-      // based on their answer, either call the bid or the post functions
+      // based on their answer, activate the appropriate function
       if (answer.actionSelection === "Add a Department") {
         addDepartment();
       }
@@ -90,6 +90,7 @@ function selectAction() {
       else if(answer.actionSelection === "View utilized budget of a department") {
         viewBudgetByDepartment();
       } else{
+        // if one of the selections was not chosen, the program closes
         connection.end();
       }
     });
@@ -98,11 +99,13 @@ function selectAction() {
 // generic lookup function that can be re-used
 function lookup(tableName, columnName, condition) {
   return new Promise(function(resolve, reject){
+    // if a condition is passed in, it will handle it with the condition
     if (condition){
       connection.query(`SELECT ${columnName} FROM ${tableName} ${condition}`, function(err, data){
         resolve(data);
       })
     }
+    // if a condition isn't passed in, it will handle the lookup without a condition
     else {
       connection.query(`SELECT ${columnName} FROM ${tableName}`, function(err, data){
         resolve(data);
@@ -111,11 +114,31 @@ function lookup(tableName, columnName, condition) {
   })
 }
 
-// function to handle posting new items up for auction
-function addDepartment() { }
+// function to handle adding a new department
+function addDepartment() {
+  inquirer
+    .prompt({
+      name: "dept",
+      type: "input",
+      message: "What is the name of the department you'd like to add?",
+    })
+    .then(answer => {
+      // based on their answer, either call the bid or the post functions
+      connection.query(`INSERT INTO department (dept_name) VALUES ("${answer.dept}")`, ((err, result) => {
+        if (err) throw err;
+        console.log("New Department Added!");
+        viewDepartments();
+      }))
+    })
+}
+
+// function to handle adding a new job role
 function addJobRole() { }
+
+// function to handle adding a new employee
 function addEmployee() { }
 
+// function to view all the departments
 function viewDepartments() { 
   connection.query("SELECT * FROM department", function(err, res){
     if (err) throw err;
@@ -124,6 +147,7 @@ function viewDepartments() {
   })
 }
 
+// function to view all the job roles
 function viewJobRoles() {
   connection.query("SELECT * FROM role", function(err, res){
     if (err) throw err;
@@ -132,6 +156,7 @@ function viewJobRoles() {
   })
  }
 
+// function to view all the employees
 function viewAllEmployees() {
   connection.query("SELECT * FROM employee", function(err, res){
     if (err) throw err;
@@ -139,12 +164,25 @@ function viewAllEmployees() {
     selectAction();
   })
  }
+
+// function to update an employee's job role
 function updateEmployeeRole() { }
 
 // bonus
+// function to update an employee's manager
 function updateEmployeeManager() { }
+
+// function to view employees by manager
 function viewEmployeesByManager() { }
+
+// function to remove a department (and all of it's employees)
 function removeDepartment() { }
+
+// function to remove a job role (and all employees with it)
 function removeJobRole() { }
+
+// function to remove an employee
 function removeEmployee() { }
+
+// function to view the sum of all salaries in a selected department
 function viewBudgetByDepartment() { }
