@@ -115,7 +115,14 @@ function lookup(tableName, columnName, condition) {
 function addDepartment() { }
 function addJobRole() { }
 function addEmployee() { }
-function viewDepartments() { }
+
+function viewDepartments() { 
+  connection.query("SELECT * FROM department", function(err, res){
+    if (err) throw err;
+    console.table(res);
+    selectAction();
+  })
+}
 
 function viewJobRoles() {
   connection.query("SELECT * FROM role", function(err, res){
@@ -125,7 +132,7 @@ function viewJobRoles() {
   })
  }
 
- function viewAllEmployees() { }
+function viewAllEmployees() { }
 function updateEmployeeRole() { }
 
 // bonus
