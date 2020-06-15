@@ -121,6 +121,22 @@ function selectAction() {
     });
 }
 
+// generic lookup function that can be re-used
+function lookup(tableName, columnName, condition) {
+  return new Promise(function(resolve, reject){
+    if (condition){
+      connection.query(`SELECT ${columnName} FROM ${tableName} ${condition}`, function(err, data){
+        resolve(data);
+      })
+    }
+    else {
+      connection.query(`SELECT ${columnName} FROM ${tableName}`, function(err, data){
+        resolve(data);
+      })
+    }
+  })
+}
+
 // function to handle posting new items up for auction
 function addDepartment() { }
 function addJobRole() { }
