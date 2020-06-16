@@ -133,7 +133,42 @@ function addDepartment() {
 }
 
 // function to handle adding a new job role
-function addJobRole() { }
+function addJobRole() {
+  lookup("department", "dept_name").then((department) => {
+    const newDepartment = department.map((dept) =>{
+      return dept.dept_name;
+    })
+    inquirer.prompt([
+      {
+        type:"input",
+        message: "What is the job title?",
+        name: "title"
+      },{
+        type:"input",
+        message: "What is the salary for the position?",
+        name: "salary"
+      },{
+        type:"list",
+        message: "Which department is this role in?",
+        name: "department",
+        choices: newDepartment
+      }
+    ]).then((answer) => {
+      lookup("department", "id", `WHERE dept_name = "${answer.department}"`).then((data) => {
+        connection.query(`INSERT INTO role (title, salary, department_id) VALUES ("${answer.title}", "${answer.salary}", "${data[0].id}")`, function (err, result){
+          if (err) throw err;
+          console.log("Role Added!");
+          selectAction();
+        })
+        
+        const newDepartment = department.map((dept) =>{
+          return dept.dept_name;
+        })
+    })
+  })
+})
+}
+
 
 // function to handle adding a new employee
 function addEmployee() { }
