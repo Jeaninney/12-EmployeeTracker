@@ -38,14 +38,14 @@ function selectAction() {
 				"View All Departments",
 				"View All Job Roles",
 				"View All Employees",
-				"Update an Employee Role",
+				"Update an Employee",
 				// bonus
-				"Update an Employee's Manager",
-				"View Employees By Manager",
-				"Remove Department",
-				"Remove Job Role",
-				"Remove Employee",
-				"View utilized budget of a department",
+				// "Update an Employee's Manager",
+				// "View Employees By Manager",
+				// "Remove Department",
+				// "Remove Job Role",
+				// "Remove Employee",
+				// "View utilized budget of a department",
 
 				"EXIT",
 			],
@@ -64,8 +64,8 @@ function selectAction() {
 				viewJobRoles();
 			} else if (answer.actionSelection === "View All Employees") {
 				viewAllEmployees();
-			} else if (answer.actionSelection === "Update an Employee Role") {
-				updateEmployeeRole();
+			} else if (answer.actionSelection === "Update an Employee") {
+				updateEmployee();
 			} else {
 				// if one of the selections was not chosen, the program closes
 				connection.end();
@@ -93,7 +93,6 @@ function lookup(tableName, columnName, condition) {
 				data
 			) {
 				if (err) throw err;
-				console.log(data);
 				resolve(data);
 			});
 		}
@@ -179,8 +178,6 @@ function addEmployee() {
 				return fullName;
 			});
 			managerChoices.push("None");
-			console.log(managerChoices);
-
 			inquirer
 				.prompt([
 					{
@@ -207,12 +204,10 @@ function addEmployee() {
 					},
 				])
 				.then((answer) => {
-					console.log(answer);
 					connection.query(
 						`SELECT * FROM employee WHERE concat(first_name, " ", last_name)="${answer.manager}"`,
 						// `SELECT * FROM employee WHERE concat(first_name, " ", last_name)="${answer.first} ${answer.last}"`,
 						(error, managerdata) => {
-							console.log(managerdata);
 							connection.query(
 								"SELECT * FROM role WHERE title= ? ",
 								answer.jobRole,
@@ -221,7 +216,7 @@ function addEmployee() {
 										`INSERT INTO employee (first_name, last_name, role_id, department_id, manager_id) VALUES ("${answer.first}", "${answer.last}", "${data[0].id}","${data[0].department_id}","${managerdata[0].id}")`,
 										function (err, result) {
 											if (err) throw err;
-											console.log("Role Added!");
+											console.log("Employee Added!");
 											selectAction();
 										}
 									);
@@ -262,5 +257,77 @@ function viewAllEmployees() {
 }
 
 // function to update an employee's job role
-function updateEmployeeRole() {}
+function updateEmployee() {
+	lookup("role", "title").then((jobRole) => {
+		const jobRoleChoices = jobRole.map((job) => {
+			return job.title;
+		});
 
+		lookup("employee", "first_name, last_name, id").then((names) => {
+			const managerChoices = names.map((name) => {
+				let fullName = `${name.first_name} ${name.last_name}`;
+				// fullName = fullName.concat(" ", lastName);
+				return fullName;
+			});
+			managerChoices.push("None");
+			lookup("employee", "first_name, last_name, id").then((employees) => {
+				const employeeChoices = employees.map((employee) => {
+					let employeefullName = `${employee.first_name} ${employee.last_name}`;
+					// fullName = fullName.concat(" ", lastName);
+					return employeefullName;
+				});
+
+				inquirer
+					.prompt([
+						{
+							type: "list",
+							message: "Which employee would you like to update?",
+							name: "employee",
+							choices: employeeChoices,
+						},
+						{
+							type: "list",
+							message: "What is the employee's role?",
+							name: "jobRole",
+							choices: jobRoleChoices,
+						},
+						{
+							type: "list",
+							message: "Who will manage this employee?",
+							name: "manager",
+							choices: managerChoices,
+						},
+					])
+					.then((answer) => {
+						connection.query(
+							`SELECT * FROM employee WHERE concat(first_name, " ", last_name)="${answer.employee}"`,
+							// `SELECT * FROM employee WHERE concat(first_name, " ", last_name)="${answer.first} ${answer.last}"`,
+							(error, employeedata) => {
+								connection.query(
+									`SELECT * FROM employee WHERE concat(first_name, " ", last_name)="${answer.manager}"`,
+									// `SELECT * FROM employee WHERE concat(first_name, " ", last_name)="${answer.first} ${answer.last}"`,
+									(error, managerdata) => {
+										connection.query(
+											"SELECT * FROM role WHERE title= ? ",
+											answer.jobRole,
+											(err, data) => {
+												var statement = connection.query(
+													`UPDATE employee SET role_id = "${data[0].id}",department_id = "${data[0].department_id}", manager_id = "${managerdata[0].id}" WHERE id = "${employeedata[0].id}"`,
+													// `INSERT INTO employee (first_name, last_name, role_id, department_id, manager_id) VALUES ("${answer.first}", "${answer.last}", "${data[0].id}","${data[0].department_id}","${managerdata[0].id}")`,
+													function (err, result) {
+														if (err) throw err;
+														console.log(`${answer.employee} updated!`);
+														selectAction();
+													}
+												);
+											}
+										);
+									}
+								);
+							}
+						);
+					});
+			});
+		});
+	});
+}
